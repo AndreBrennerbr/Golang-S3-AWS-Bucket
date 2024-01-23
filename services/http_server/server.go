@@ -7,14 +7,16 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	"github.com/minio/minio-go/v7"
 )
 
-var bucketName string = "brenner"
+var bucketName string
 
 func Start() {
+	bucketName = os.Getenv("BUCKETNAME")
 	s3conect.Create()
 
 	existBucket, _ := s3conect.MinioClient.BucketExists(context.Background(), bucketName)
