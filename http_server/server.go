@@ -7,8 +7,6 @@ import (
 	"file_upload_project/http_server/routes"
 )
 
-var bucketName string
-
 func Start() {
 	config.LoadEnv()
 
