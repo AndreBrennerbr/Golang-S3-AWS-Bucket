@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/minio/minio-go/v7"
 )
@@ -32,12 +33,15 @@ func Start() {
 	uploadHandle := http.HandlerFunc(uploadFileMinIO)
 	getHandle := http.HandlerFunc(getObjects)
 	downloadHandle := http.HandlerFunc(downloadObject)
+	deleteHandle := http.HandlerFunc(deletObject)
 
 	http.HandleFunc("/upload", isPostMethodMiddleware(uploadHandle))
 
 	http.HandleFunc("/get_objects", isGetMethodMiddleware(getHandle))
 
 	http.HandleFunc("/download", isGetMethodMiddleware(downloadHandle))
+
+	http.HandleFunc("/delete/", isDeleteMethodMiddleware(deleteHandle))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 
@@ -56,6 +60,16 @@ func isPostMethodMiddleware(next http.HandlerFunc) http.HandlerFunc {
 func isGetMethodMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
+			http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
+			return
+		}
+		next.ServeHTTP(w, r)
+	}
+}
+
+func isDeleteMethodMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
 			http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
 			return
 		}
@@ -151,4 +165,26 @@ func downloadObject(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erro ao servir o objeto", http.StatusInternalServerError)
 		return
 	}
+}
+
+func deletObject(w http.ResponseWriter, r *http.Request) {
+
+	caminho := strings.Split(r.URL.Path, "/")
+
+	if len(caminho) <= 1 {
+		http.Error(w, "Erro ao ler o path", http.StatusInternalServerError)
+		return
+	}
+
+	objectName := caminho[2]
+
+	err := s3conect.MinioClient.RemoveObject(context.Background(), bucketName, objectName, minio.RemoveObjectOptions{})
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Fprintln(w, "Deletado com sucesso")
+	w.WriteHeader(http.StatusOK)
 }
