@@ -79,7 +79,9 @@ func isDeleteMethodMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 func uploadFileMinIO(w http.ResponseWriter, r *http.Request) {
 
-	validadeTypeOfFile(w, r)
+	if !validadeTypeOfFile(w, r) {
+		return
+	}
 
 	file, handler, err := r.FormFile("file")
 
@@ -102,11 +104,11 @@ func uploadFileMinIO(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func validadeTypeOfFile(w http.ResponseWriter, r *http.Request) {
+func validadeTypeOfFile(w http.ResponseWriter, r *http.Request) bool {
 	file, handler, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, "Erro ao obter o arquivo do formulário", http.StatusBadRequest)
-		return
+		return false
 	}
 
 	defer file.Close()
@@ -116,7 +118,10 @@ func validadeTypeOfFile(w http.ResponseWriter, r *http.Request) {
 
 	if !contains(acceptedExtensions, extension) {
 		http.Error(w, "Tipo de arquivo não permitido", http.StatusBadRequest)
+		return false
 	}
+
+	return true
 }
 
 func contains(arr []string, value string) bool {
