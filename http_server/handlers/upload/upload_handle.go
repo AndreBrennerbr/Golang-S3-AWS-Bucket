@@ -11,7 +11,7 @@ import (
 
 func UploadFileMinIO(w http.ResponseWriter, r *http.Request) {
 
-	if !ValidadeTypeOfFile(w, r) {
+	if !validadeTypeOfFile(w, r) {
 		return
 	}
 
@@ -24,7 +24,21 @@ func UploadFileMinIO(w http.ResponseWriter, r *http.Request) {
 
 	objectName := handler.Filename
 
-	info, err := minio_service.MinioClient.PutObject(context.Background(), minio_service.BucketName, objectName, file, -1, minio.PutObjectOptions{})
+	compressed_file, err := compress(w, r, file, objectName)
+
+	if err != nil {
+		http.Error(w, "Erro ao comprimir arquivo", http.StatusInternalServerError)
+		return
+	}
+
+	info, err := minio_service.MinioClient.PutObject(
+		context.Background(),
+		minio_service.BucketName,
+		objectName,
+		compressed_file,
+		-1,
+		minio.PutObjectOptions{},
+	)
 
 	if err != nil {
 		http.Error(w, "Erro ao salvar arquivo", http.StatusBadRequest)

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 )
 
-func ValidadeTypeOfFile(w http.ResponseWriter, r *http.Request) bool {
+func validadeTypeOfFile(w http.ResponseWriter, r *http.Request) bool {
 	file, handler, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, "Erro ao obter o arquivo do formulário", http.StatusBadRequest)
@@ -14,7 +14,7 @@ func ValidadeTypeOfFile(w http.ResponseWriter, r *http.Request) bool {
 
 	defer file.Close()
 
-	acceptedExtensions := []string{".pdf", ".doc", ".docx"}
+	acceptedExtensions := []string{".pdf", ".doc", ".docx", ".txt"}
 	extension := filepath.Ext(handler.Filename)
 
 	if !contains(acceptedExtensions, extension) {
