@@ -44,6 +44,12 @@ func compress(w http.ResponseWriter, r *http.Request, file multipart.File, fileN
 	}
 	defer tarGzFile.Close()
 
+	defer func() {
+		if removeErr := os.Remove(tarGzFilePath); removeErr != nil {
+			log.Printf("Erro ao excluir o arquivo temporário: %s", removeErr)
+		}
+	}()
+
 	gzipWriter := gzip.NewWriter(tarGzFile)
 	defer gzipWriter.Close()
 
