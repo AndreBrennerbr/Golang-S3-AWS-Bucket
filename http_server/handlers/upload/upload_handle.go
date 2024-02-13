@@ -5,13 +5,14 @@ import (
 	minio_service "file_upload_project/core/services/minIO"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/minio/minio-go/v7"
 )
 
 func UploadFileMinIO(w http.ResponseWriter, r *http.Request) {
 
-	if !validadeTypeOfFile(w, r) {
+	if !validateTypeOfFile(w, r) {
 		return
 	}
 
@@ -31,10 +32,15 @@ func UploadFileMinIO(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	defer compressed_file.Close()
+	defer file.Close()
+
+	objectNameTarGz := regexp.MustCompile(`\.(.*)$`).ReplaceAllString(objectName, ".tar.gz")
+
 	info, err := minio_service.MinioClient.PutObject(
 		context.Background(),
 		minio_service.BucketName,
-		objectName,
+		objectNameTarGz,
 		compressed_file,
 		-1,
 		minio.PutObjectOptions{},
