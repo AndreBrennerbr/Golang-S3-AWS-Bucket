@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 )
 
-func validadeTypeOfFile(w http.ResponseWriter, r *http.Request) bool {
+func validateTypeOfFile(w http.ResponseWriter, r *http.Request) bool {
 	file, handler, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, "Erro ao obter o arquivo do formulário", http.StatusBadRequest)
