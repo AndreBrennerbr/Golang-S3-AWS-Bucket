@@ -29,3 +29,11 @@ func EnvSecretAccesKey() string {
 func EnvBucketName() string {
 	return os.Getenv("BUCKETNAME")
 }
+
+func EnvRabbitMq() string {
+	return os.Getenv("RABBITMQ")
+}
+
+func EnvRabbitMqQueueName() string {
+	return os.Getenv("QUEUENAME")
+}

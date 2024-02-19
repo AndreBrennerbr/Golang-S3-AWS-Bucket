@@ -2,12 +2,15 @@ module file_upload_project
 
 go 1.21.5
 
-require github.com/minio/minio-go/v7 v7.0.66
+require (
+	github.com/joho/godotenv v1.5.1
+	github.com/minio/minio-go/v7 v7.0.66
+	github.com/streadway/amqp v1.1.0
+)
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/uuid v1.5.0 // indirect
-	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
