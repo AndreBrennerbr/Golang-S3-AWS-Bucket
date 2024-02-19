@@ -90,10 +90,14 @@ func consumer(channel *amqp.Channel) {
 		false,      // no wait
 		nil,        //args
 	)
+
 	if err != nil {
 		panic(err)
 	}
 
+}
+
+func listener(msgs <-chan amqp.Delivery) {
 	// print consumed messages from queue
 	forever := make(chan bool)
 	go func() {
