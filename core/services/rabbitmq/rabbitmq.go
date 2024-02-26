@@ -10,6 +10,40 @@ import (
 
 var ConnData *entities.RabbitMq
 
+func Start() error {
+	//conection
+	conn, err := Connect()
+
+	if err != nil {
+		if err != nil {
+			log.Fatal(err)
+			return err
+		}
+	}
+
+	//channel
+	channel, err := Createchannel(conn)
+
+	if err != nil {
+		if err != nil {
+			log.Fatal(err)
+			return err
+		}
+	}
+
+	//Queue
+	err = Createqueue(channel)
+
+	if err != nil {
+		if err != nil {
+			log.Fatal(err)
+			return err
+		}
+	}
+
+	return nil
+}
+
 func Connect() (*amqp.Connection, error) {
 
 	ConnData = &entities.RabbitMq{}
@@ -40,7 +74,7 @@ func Createchannel(connection *amqp.Connection) (*amqp.Channel, error) {
 	return channel, nil
 }
 
-func Createqueue(channel *amqp.Channel) {
+func Createqueue(channel *amqp.Channel) error {
 
 	queue_name := ConnData.QueueName
 
@@ -54,11 +88,12 @@ func Createqueue(channel *amqp.Channel) {
 	)
 	if err != nil {
 		panic(err)
+		return err
 	}
-
+	return nil
 }
 
-func CreatePublisher(channel *amqp.Channel) {
+func CreatePublisher(channel *amqp.Channel) error {
 
 	queue_name := ConnData.QueueName
 
@@ -74,10 +109,12 @@ func CreatePublisher(channel *amqp.Channel) {
 	)
 	if err != nil {
 		panic(err)
+		return err
 	}
+	return nil
 }
 
-func consumer(channel *amqp.Channel) {
+func consumer(channel *amqp.Channel) error {
 
 	queue_name := ConnData.QueueName
 
@@ -93,7 +130,10 @@ func consumer(channel *amqp.Channel) {
 
 	if err != nil {
 		panic(err)
+		return err
 	}
+
+	return nil
 
 }
 
