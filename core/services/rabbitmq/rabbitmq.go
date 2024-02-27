@@ -17,36 +17,27 @@ var (
 )
 
 func Start() error {
-	//conection
 	conn, err := Connect()
-
 	if err != nil {
 		if err != nil {
 			log.Fatal(err)
 			return err
 		}
 	}
-
-	//channel
 	Channel, err := Createchannel(conn)
-
 	if err != nil {
 		if err != nil {
 			log.Fatal(err)
 			return err
 		}
 	}
-
-	//Queue
 	err = Createqueue(Channel)
-
 	if err != nil {
 		if err != nil {
 			log.Fatal(err)
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -94,7 +85,6 @@ func Createqueue(channel *amqp.Channel) error {
 	)
 	if err != nil {
 		panic(err)
-		return err
 	}
 	return nil
 }
@@ -144,7 +134,6 @@ func consumer(channel *amqp.Channel) error {
 
 	if err != nil {
 		panic(err)
-		return err
 	}
 
 	return nil
