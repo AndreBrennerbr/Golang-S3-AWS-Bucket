@@ -1,14 +1,20 @@
 package rabbitmq
 
 import (
+	"encoding/base64"
 	"file_upload_project/core/entities"
 	"fmt"
+	"io"
 	"log"
+	"mime/multipart"
 
 	"github.com/streadway/amqp"
 )
 
-var ConnData *entities.RabbitMq
+var (
+	ConnData *entities.RabbitMq
+	Channel  *amqp.Channel
+)
 
 func Start() error {
 	//conection
@@ -22,7 +28,7 @@ func Start() error {
 	}
 
 	//channel
-	channel, err := Createchannel(conn)
+	Channel, err := Createchannel(conn)
 
 	if err != nil {
 		if err != nil {
@@ -32,7 +38,7 @@ func Start() error {
 	}
 
 	//Queue
-	err = Createqueue(channel)
+	err = Createqueue(Channel)
 
 	if err != nil {
 		if err != nil {
@@ -93,24 +99,32 @@ func Createqueue(channel *amqp.Channel) error {
 	return nil
 }
 
-func CreatePublisher(channel *amqp.Channel) error {
+func CreatePublisher(channel *amqp.Channel, content_file multipart.File) error {
 
 	queue_name := ConnData.QueueName
+	conteudo, err := io.ReadAll(content_file)
+	if err != nil {
+		return err
+	}
 
-	err := channel.Publish(
+	conteudoCodificado := base64.StdEncoding.EncodeToString(conteudo)
+
+	err = channel.Publish(
 		"",         // exchange
 		queue_name, // key
 		false,      // mandatory
 		false,      // immediate
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte("Test Message"),
+			ContentType: "application/octet-stream",
+			Body:        []byte(conteudoCodificado),
 		},
 	)
+
 	if err != nil {
 		panic(err)
 		return err
 	}
+
 	return nil
 }
 
