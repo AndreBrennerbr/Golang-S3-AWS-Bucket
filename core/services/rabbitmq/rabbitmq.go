@@ -62,7 +62,7 @@ func Createchannel(connection *amqp.Connection) (*amqp.Channel, error) {
 	channel, err := connection.Channel()
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 		return nil, err
 	}
 
@@ -84,7 +84,8 @@ func Createqueue(channel *amqp.Channel) error {
 		nil,        // args
 	)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return err
 	}
 	return nil
 }
@@ -94,6 +95,7 @@ func CreatePublisher(channel *amqp.Channel, content_file multipart.File) error {
 	queue_name := ConnData.QueueName
 	conteudo, err := io.ReadAll(content_file)
 	if err != nil {
+		log.Fatal(err)
 		return err
 	}
 
@@ -133,7 +135,8 @@ func consumer(channel *amqp.Channel) error {
 	)
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return err
 	}
 
 	return nil
