@@ -21,5 +21,11 @@ func Start() {
 		panic(err)
 	}
 
+	err = rabbitmq.Consumer(rabbitmq.Channel)
+
+	if err != nil {
+		panic(err)
+	}
+
 	routes.Routes()
 }

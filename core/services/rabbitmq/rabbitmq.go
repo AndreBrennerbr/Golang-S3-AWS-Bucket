@@ -113,14 +113,14 @@ func CreatePublisher(channel *amqp.Channel, content_file multipart.File) error {
 	)
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 		return err
 	}
 
 	return nil
 }
 
-func consumer(channel *amqp.Channel) error {
+func Consumer(channel *amqp.Channel) error {
 
 	queue_name := ConnData.QueueName
 
@@ -138,6 +138,8 @@ func consumer(channel *amqp.Channel) error {
 		log.Fatal(err)
 		return err
 	}
+
+	go listener(msgs)
 
 	return nil
 
