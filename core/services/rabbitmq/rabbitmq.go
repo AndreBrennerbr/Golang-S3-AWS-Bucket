@@ -16,62 +16,45 @@ var (
 	Channel  *amqp.Channel
 )
 
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Panicf("%s: %s", msg, err)
+	}
+}
+
 func Start() error {
-	conn, err := Connect()
-	if err != nil {
-		if err != nil {
-			log.Fatal(err)
-			return err
-		}
-	}
-	Channel, err := Createchannel(conn)
-	if err != nil {
-		if err != nil {
-			log.Fatal(err)
-			return err
-		}
-	}
-	err = Createqueue(Channel)
-	if err != nil {
-		if err != nil {
-			log.Fatal(err)
-			return err
-		}
-	}
+	conn := Connect()
+	Channel := Createchannel(conn)
+	Createqueue(Channel)
+
 	return nil
 }
 
-func Connect() (*amqp.Connection, error) {
+func Connect() *amqp.Connection {
 
 	ConnData = &entities.RabbitMq{}
 	*ConnData = ConnData.NewConn()
 
 	connection, err := amqp.Dial("amqp:" + ConnData.Ip)
 
-	if err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
+	failOnError(err, "Erro ao conectar no rabbitMq")
 
 	defer connection.Close()
 
-	return connection, nil
+	return connection
 }
 
-func Createchannel(connection *amqp.Connection) (*amqp.Channel, error) {
+func Createchannel(connection *amqp.Connection) *amqp.Channel {
 	channel, err := connection.Channel()
 
-	if err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
+	failOnError(err, "Erro ao cirar channel")
 
 	defer channel.Close()
 
-	return channel, nil
+	return channel
 }
 
-func Createqueue(channel *amqp.Channel) error {
+func Createqueue(channel *amqp.Channel) {
 
 	queue_name := ConnData.QueueName
 
@@ -83,11 +66,8 @@ func Createqueue(channel *amqp.Channel) error {
 		false,      // no wait
 		nil,        // args
 	)
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-	return nil
+
+	failOnError(err, "Erro ao criar fila")
 }
 
 func CreatePublisher(channel *amqp.Channel, content_file multipart.File) error {
