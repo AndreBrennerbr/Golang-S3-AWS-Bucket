@@ -1,7 +1,6 @@
 package upload
 
 import (
-	"file_upload_project/core/services/rabbitmq"
 	"net/http"
 )
 
@@ -16,5 +15,5 @@ func queueUpload(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	rabbitmq.CreatePublisher(rabbitmq.Channel, file)
+	//rabbitmq.CreatePublisher(rabbitmq.Channel, file)
 }

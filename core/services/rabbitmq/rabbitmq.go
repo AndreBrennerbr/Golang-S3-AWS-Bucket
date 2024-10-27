@@ -1,14 +1,15 @@
 package rabbitmq
 
 import (
+	"context"
 	"encoding/base64"
 	"file_upload_project/core/entities"
-	"fmt"
 	"io"
 	"log"
 	"mime/multipart"
+	"time"
 
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var (
@@ -22,12 +23,12 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func Start() error {
+func Start() (amqp.Queue, error) {
 	conn := Connect()
 	Channel := Createchannel(conn)
-	Createqueue(Channel)
+	p := Createqueue(Channel)
 
-	return nil
+	return p, nil
 }
 
 func Connect() *amqp.Connection {
@@ -54,11 +55,11 @@ func Createchannel(connection *amqp.Connection) *amqp.Channel {
 	return channel
 }
 
-func Createqueue(channel *amqp.Channel) {
+func Createqueue(channel *amqp.Channel) amqp.Queue {
 
 	queue_name := ConnData.QueueName
 
-	_, err := channel.QueueDeclare(
+	p, err := channel.QueueDeclare(
 		queue_name, // name
 		false,      // durable
 		false,      // auto delete
@@ -68,72 +69,34 @@ func Createqueue(channel *amqp.Channel) {
 	)
 
 	failOnError(err, "Erro ao criar fila")
+
+	return p
 }
 
-func CreatePublisher(channel *amqp.Channel, content_file multipart.File) error {
+func sendMessage(p amqp.Queue, ch *amqp.Channel, file multipart.File) {
 
-	queue_name := ConnData.QueueName
-	conteudo, err := io.ReadAll(content_file)
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	conteudo, err := io.ReadAll(file)
+
+	failOnError(err, "Erro ao ler conteudo do arquivo")
 
 	conteudoCodificado := base64.StdEncoding.EncodeToString(conteudo)
 
-	err = channel.Publish(
-		"",         // exchange
-		queue_name, // key
-		false,      // mandatory
-		false,      // immediate
+	err = ch.PublishWithContext(ctx,
+		"",     // exchange
+		p.Name, // routing key
+		false,  // mandatory
+		false,  // immediate
 		amqp.Publishing{
-			ContentType: "application/octet-stream",
+			ContentType: "text/plain",
 			Body:        []byte(conteudoCodificado),
-		},
-	)
-
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-
-	return nil
+		})
+	failOnError(err, "Failed to publish a message")
+	log.Printf(" [x] Sent %s\n", conteudoCodificado)
 }
 
-func Consumer(channel *amqp.Channel) error {
+func readMessage(p amqp.Queue) {
 
-	queue_name := ConnData.QueueName
-
-	msgs, err := channel.Consume(
-		queue_name, // queue
-		"",         // consumer
-		true,       // auto ack
-		false,      // exclusive
-		false,      // no local
-		false,      // no wait
-		nil,        //args
-	)
-
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-
-	go listener(msgs)
-
-	return nil
-
-}
-
-func listener(msgs <-chan amqp.Delivery) {
-	// print consumed messages from queue
-	forever := make(chan bool)
-	go func() {
-		for msg := range msgs {
-			fmt.Printf("Received Message: %s\n", msg.Body)
-		}
-	}()
-
-	fmt.Println("Waiting for messages...")
-	<-forever
 }
