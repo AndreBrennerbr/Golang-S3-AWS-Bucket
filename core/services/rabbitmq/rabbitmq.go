@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"time"
 
+	"github.com/rabbitmq/amqp091-go"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -23,12 +24,12 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func Start() (amqp.Queue, error) {
+func Start() {
 	conn := Connect()
 	Channel := Createchannel(conn)
-	p := Createqueue(Channel)
-
-	return p, nil
+	Queue := Createqueue(Channel)
+	msgs := createConsumer(Channel, Queue)
+	createListener(msgs)
 }
 
 func Connect() *amqp.Connection {
@@ -59,7 +60,7 @@ func Createqueue(channel *amqp.Channel) amqp.Queue {
 
 	queue_name := ConnData.QueueName
 
-	p, err := channel.QueueDeclare(
+	queue, err := channel.QueueDeclare(
 		queue_name, // name
 		false,      // durable
 		false,      // auto delete
@@ -70,7 +71,37 @@ func Createqueue(channel *amqp.Channel) amqp.Queue {
 
 	failOnError(err, "Erro ao criar fila")
 
-	return p
+	return queue
+}
+
+func createConsumer(ch *amqp.Channel, Queue amqp.Queue) <-chan amqp091.Delivery {
+
+	msgs, err := ch.Consume(
+		Queue.Name, // queue
+		"",         // consumer
+		true,       // auto-ack
+		false,      // exclusive
+		false,      // no-local
+		false,      // no-wait
+		nil,        // args
+	)
+
+	failOnError(err, "Failed to register a consumer")
+
+	return msgs
+}
+
+func createListener(msgs <-chan amqp091.Delivery) {
+	var forever chan struct{}
+
+	go func() {
+		for d := range msgs {
+			log.Printf("Received a message: %s", d.Body)
+		}
+	}()
+
+	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
+	<-forever
 }
 
 func sendMessage(p amqp.Queue, ch *amqp.Channel, file multipart.File) {
@@ -95,8 +126,4 @@ func sendMessage(p amqp.Queue, ch *amqp.Channel, file multipart.File) {
 		})
 	failOnError(err, "Failed to publish a message")
 	log.Printf(" [x] Sent %s\n", conteudoCodificado)
-}
-
-func readMessage(p amqp.Queue) {
-
 }
