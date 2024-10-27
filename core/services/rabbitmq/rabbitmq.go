@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/base64"
 	"file_upload_project/core/entities"
+	"file_upload_project/http_server/handlers/upload"
 	"io"
 	"log"
-	"mime/multipart"
+	"os"
 	"time"
 
 	"github.com/rabbitmq/amqp091-go"
@@ -96,6 +97,7 @@ func createListener(msgs <-chan amqp091.Delivery) {
 
 	go func() {
 		for d := range msgs {
+			upload.UploadFileMinIO()
 			log.Printf("Received a message: %s", d.Body)
 		}
 	}()
@@ -104,7 +106,7 @@ func createListener(msgs <-chan amqp091.Delivery) {
 	<-forever
 }
 
-func SendMessage(file multipart.File) {
+func SendMessage(file *os.File, objectNameTarGz string) {
 
 	conn := Connect()
 	Channel := Createchannel(conn)
