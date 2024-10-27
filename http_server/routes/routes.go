@@ -12,7 +12,7 @@ import (
 
 func Routes() {
 
-	uploadHandle := http.HandlerFunc(upload.UploadFileMinIO)
+	uploadHandle := http.HandlerFunc(upload.QueueUpload)
 	getHandle := http.HandlerFunc(getfile.GetObjects)
 	downloadHandle := http.HandlerFunc(download.DownloadObject)
 	deleteHandle := http.HandlerFunc(delete_handler.DeletObject)

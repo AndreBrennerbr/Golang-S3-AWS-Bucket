@@ -104,7 +104,11 @@ func createListener(msgs <-chan amqp091.Delivery) {
 	<-forever
 }
 
-func sendMessage(p amqp.Queue, ch *amqp.Channel, file multipart.File) {
+func SendMessage(file multipart.File) {
+
+	conn := Connect()
+	Channel := Createchannel(conn)
+	Queue := Createqueue(Channel)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -115,11 +119,11 @@ func sendMessage(p amqp.Queue, ch *amqp.Channel, file multipart.File) {
 
 	conteudoCodificado := base64.StdEncoding.EncodeToString(conteudo)
 
-	err = ch.PublishWithContext(ctx,
-		"",     // exchange
-		p.Name, // routing key
-		false,  // mandatory
-		false,  // immediate
+	err = Channel.PublishWithContext(ctx,
+		"",         // exchange
+		Queue.Name, // routing key
+		false,      // mandatory
+		false,      // immediate
 		amqp.Publishing{
 			ContentType: "text/plain",
 			Body:        []byte(conteudoCodificado),
